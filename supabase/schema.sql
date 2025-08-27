@@ -3,7 +3,20 @@
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- Create users table (extends Supabase auth.users)
+-- Create profiles table (extends Supabase auth.users)
+CREATE TABLE IF NOT EXISTS profiles (
+  id UUID REFERENCES auth.users(id) PRIMARY KEY,
+  email TEXT NOT NULL,
+  full_name TEXT,
+  avatar_url TEXT,
+  role TEXT DEFAULT 'user' CHECK (role IN ('user', 'admin')),
+  subscription_tier TEXT DEFAULT 'free' CHECK (subscription_tier IN ('free', 'premium', 'pro')),
+  credits INTEGER DEFAULT 0,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL
+);
+
+-- Create users table for backward compatibility
 CREATE TABLE IF NOT EXISTS users (
   id UUID REFERENCES auth.users(id) PRIMARY KEY,
   email TEXT NOT NULL,
@@ -28,10 +41,15 @@ CREATE TABLE IF NOT EXISTS prompts (
   title TEXT NOT NULL,
   description TEXT NOT NULL,
   content TEXT NOT NULL,
-  price INTEGER NOT NULL,
-  user_id UUID REFERENCES users(id) NOT NULL,
-  model_id UUID REFERENCES ai_models(id) NOT NULL,
+  category TEXT NOT NULL,
   tags TEXT[] DEFAULT '{}',
+  price INTEGER DEFAULT 0,
+  is_free BOOLEAN DEFAULT true,
+  is_featured BOOLEAN DEFAULT false,
+  author_id UUID REFERENCES profiles(id) NOT NULL,
+  downloads INTEGER DEFAULT 0,
+  rating DECIMAL(3,2) DEFAULT 0,
+  rating_count INTEGER DEFAULT 0,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL
 );
@@ -39,9 +57,10 @@ CREATE TABLE IF NOT EXISTS prompts (
 -- Create purchases table
 CREATE TABLE IF NOT EXISTS purchases (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID REFERENCES users(id) NOT NULL,
+  user_id UUID REFERENCES profiles(id) NOT NULL,
   prompt_id UUID REFERENCES prompts(id) NOT NULL,
   amount INTEGER NOT NULL,
+  stripe_payment_intent_id TEXT NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL,
   UNIQUE(user_id, prompt_id)
 );
@@ -49,7 +68,7 @@ CREATE TABLE IF NOT EXISTS purchases (
 -- Create reviews table
 CREATE TABLE IF NOT EXISTS reviews (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID REFERENCES users(id) NOT NULL,
+  user_id UUID REFERENCES profiles(id) NOT NULL,
   prompt_id UUID REFERENCES prompts(id) NOT NULL,
   rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
   comment TEXT,
@@ -78,8 +97,13 @@ EXECUTE FUNCTION update_updated_at();
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
+  INSERT INTO public.profiles (id, email, full_name, avatar_url)
+  VALUES (NEW.id, NEW.email, NEW.raw_user_meta_data->>'full_name', NEW.raw_user_meta_data->>'avatar_url');
+  
+  -- Also create in users table for backward compatibility
   INSERT INTO public.users (id, email, name, avatar_url)
   VALUES (NEW.id, NEW.email, NEW.raw_user_meta_data->>'name', NEW.raw_user_meta_data->>'avatar_url');
+  
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -113,17 +137,28 @@ GROUP BY p.id, u.id, m.id;
 -- RLS Policies
 
 -- Enable RLS on all tables
+ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE ai_models ENABLE ROW LEVEL SECURITY;
 ALTER TABLE prompts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE purchases ENABLE ROW LEVEL SECURITY;
 ALTER TABLE reviews ENABLE ROW LEVEL SECURITY;
 
+-- Profiles policies
+CREATE POLICY "Profiles are viewable by everyone" ON profiles
+FOR SELECT USING (true);
+
+CREATE POLICY "Users can update their own profile" ON profiles
+FOR UPDATE USING (auth.uid() = id);
+
+CREATE POLICY "Users can insert their own profile" ON profiles
+FOR INSERT WITH CHECK (auth.uid() = id);
+
 -- Users policies
 CREATE POLICY "Users are viewable by everyone" ON users
 FOR SELECT USING (true);
 
-CREATE POLICY "Users can update their own profile" ON users
+CREATE POLICY "Users can update their own user record" ON users
 FOR UPDATE USING (auth.uid() = id);
 
 -- AI Models policies
@@ -135,13 +170,13 @@ CREATE POLICY "Prompts are viewable by everyone" ON prompts
 FOR SELECT USING (true);
 
 CREATE POLICY "Users can insert their own prompts" ON prompts
-FOR INSERT WITH CHECK (auth.uid() = user_id);
+FOR INSERT WITH CHECK (auth.uid() = author_id);
 
 CREATE POLICY "Users can update their own prompts" ON prompts
-FOR UPDATE USING (auth.uid() = user_id);
+FOR UPDATE USING (auth.uid() = author_id);
 
 CREATE POLICY "Users can delete their own prompts" ON prompts
-FOR DELETE USING (auth.uid() = user_id);
+FOR DELETE USING (auth.uid() = author_id);
 
 -- Purchases policies
 CREATE POLICY "Users can view their own purchases" ON purchases

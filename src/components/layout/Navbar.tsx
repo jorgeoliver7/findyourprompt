@@ -12,14 +12,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { User } from '@/types';
+import { useAuthContext } from '@/contexts/AuthContext';
 import CartDropdown from '@/components/cart/CartDropdown';
 
-type NavbarProps = {
-  user: User | null;
-};
-
-export default function Navbar({ user }: NavbarProps) {
+export default function Navbar() {
+  const { user, profile, signOut, loading } = useAuthContext();
   const pathname = usePathname();
 
   const navItems = [
@@ -60,15 +57,15 @@ export default function Navbar({ user }: NavbarProps) {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                     <Avatar className="h-8 w-8">
-                      <AvatarImage src={user.avatar_url} alt={user.name} />
-                      <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                      <AvatarImage src={profile?.avatar_url || ''} alt={profile?.full_name || 'Usuario'} />
+                      <AvatarFallback>{profile?.full_name?.charAt(0) || user.email?.charAt(0) || 'U'}</AvatarFallback>
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56" align="end" forceMount>
                   <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium leading-none">{user.name}</p>
+                      <p className="text-sm font-medium leading-none">{profile?.full_name || 'Usuario'}</p>
                       <p className="text-xs leading-none text-muted-foreground">
                         {user.email}
                       </p>
@@ -85,8 +82,12 @@ export default function Navbar({ user }: NavbarProps) {
                     <Link href="/dashboard/settings">Configuración</Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <Link href="/api/auth/signout">Cerrar Sesión</Link>
+                  <DropdownMenuItem 
+                    onClick={async () => {
+                      await signOut()
+                    }}
+                  >
+                    Cerrar Sesión
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

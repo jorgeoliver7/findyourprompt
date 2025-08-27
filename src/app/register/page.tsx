@@ -20,7 +20,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { createSupabaseBrowserClient } from '@/lib/supabase';
+import { useAuthContext } from '@/contexts/AuthContext';
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -41,7 +41,7 @@ const formSchema = z.object({
 export default function RegisterPage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const supabase = createSupabaseBrowserClient();
+  const { signUp } = useAuthContext();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -57,42 +57,16 @@ export default function RegisterPage() {
     try {
       setIsSubmitting(true);
       
-      // Registrar usuario con Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: values.email,
-        password: values.password,
-        options: {
-          data: {
-            name: values.name,
-          },
-        },
+      const { error } = await signUp(values.email, values.password, {
+        full_name: values.name,
       });
 
-      if (authError) {
-        throw authError;
+      if (error) {
+        throw error;
       }
 
-      // Crear perfil de usuario en la tabla users
-      if (authData.user) {
-        const { error: profileError } = await supabase
-          .from('users')
-          .insert([
-            {
-              id: authData.user.id,
-              email: values.email,
-              name: values.name,
-              created_at: new Date().toISOString(),
-            },
-          ]);
-
-        if (profileError) {
-          throw profileError;
-        }
-      }
-
-      toast.success('Cuenta creada exitosamente');
-      router.push('/dashboard');
-      router.refresh();
+      toast.success('Cuenta creada exitosamente. Revisa tu email para confirmar tu cuenta.');
+      router.push('/login');
     } catch (error: any) {
       toast.error(error.message || 'Error al crear la cuenta');
     } finally {

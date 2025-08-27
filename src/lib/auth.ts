@@ -5,11 +5,19 @@ import { User } from '@/types';
 
 // Crear un cliente de Supabase en el servidor
 export const createServerSupabaseClient = () => {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  
+  // Check if Supabase is configured
+  if (!supabaseUrl || supabaseUrl === 'your_supabase_project_url' || !supabaseKey || supabaseKey === 'your_supabase_anon_key') {
+    throw new Error('Supabase is not configured properly');
+  }
+  
   const cookieStore = cookies();
   
   return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl,
+    supabaseKey,
     {
       cookies: {
         get(name: string) {
@@ -28,9 +36,8 @@ export const createServerSupabaseClient = () => {
 
 // Obtener el usuario actual desde el servidor
 export async function getCurrentUser(): Promise<User | null> {
-  const supabase = createServerSupabaseClient();
-  
   try {
+    const supabase = createServerSupabaseClient();
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) {

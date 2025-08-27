@@ -20,7 +20,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { createSupabaseBrowserClient } from '@/lib/supabase';
+import { useAuthContext } from '@/contexts/AuthContext';
 
 const formSchema = z.object({
   email: z.string().email({
@@ -34,7 +34,7 @@ const formSchema = z.object({
 export default function LoginPage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const supabase = createSupabaseBrowserClient();
+  const { signIn } = useAuthContext();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -48,10 +48,7 @@ export default function LoginPage() {
     try {
       setIsSubmitting(true);
       
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: values.email,
-        password: values.password,
-      });
+      const { error } = await signIn(values.email, values.password);
 
       if (error) {
         throw error;

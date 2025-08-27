@@ -5,6 +5,7 @@ import { Toaster } from "sonner";
 
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
+import { AuthProvider } from "@/contexts/AuthContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -26,20 +27,19 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // En un entorno real, obtendríamos el usuario de la sesión
-  const user = null; // Placeholder para el usuario autenticado
-
   return (
     <html lang="es">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}
       >
-        <Navbar user={user} />
-        <main className="flex-1">
-          {children}
-        </main>
-        <Footer />
-        <Toaster position="top-center" />
+        <AuthProvider>
+          <Navbar />
+          <main className="flex-1">
+            {children}
+          </main>
+          <Footer />
+          <Toaster position="top-center" />
+        </AuthProvider>
       </body>
     </html>
   );
