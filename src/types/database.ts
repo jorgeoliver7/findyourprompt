@@ -44,19 +44,98 @@ export interface Database {
           updated_at?: string
         }
       }
+      users: {
+        Row: {
+          id: string
+          email: string
+          name: string | null
+          avatar_url: string | null
+          created_at: string
+        }
+        Insert: {
+          id: string
+          email: string
+          name?: string | null
+          avatar_url?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          email?: string
+          name?: string | null
+          avatar_url?: string | null
+          created_at?: string
+        }
+      }
+      categories: {
+        Row: {
+          id: string
+          name: string
+          description: string | null
+          icon: string | null
+          color: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          description?: string | null
+          icon?: string | null
+          color?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          description?: string | null
+          icon?: string | null
+          color?: string
+          created_at?: string
+        }
+      }
+      ai_models: {
+        Row: {
+          id: string
+          name: string
+          provider: string
+          description: string | null
+          icon_url: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          provider: string
+          description?: string | null
+          icon_url?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          provider?: string
+          description?: string | null
+          icon_url?: string | null
+          created_at?: string
+        }
+      }
       prompts: {
         Row: {
           id: string
           title: string
           description: string
           content: string
-          category: string
+          category_id: string | null
           tags: string[]
           price: number
           is_free: boolean
           is_featured: boolean
+          is_public: boolean
           author_id: string
+          model_id: string | null
           downloads: number
+          views: number
+          likes: number
           rating: number
           rating_count: number
           created_at: string
@@ -67,13 +146,17 @@ export interface Database {
           title: string
           description: string
           content: string
-          category: string
+          category_id?: string | null
           tags?: string[]
           price?: number
           is_free?: boolean
           is_featured?: boolean
+          is_public?: boolean
           author_id: string
+          model_id?: string | null
           downloads?: number
+          views?: number
+          likes?: number
           rating?: number
           rating_count?: number
           created_at?: string
@@ -84,17 +167,61 @@ export interface Database {
           title?: string
           description?: string
           content?: string
-          category?: string
+          category_id?: string | null
           tags?: string[]
           price?: number
           is_free?: boolean
           is_featured?: boolean
+          is_public?: boolean
           author_id?: string
+          model_id?: string | null
           downloads?: number
+          views?: number
+          likes?: number
           rating?: number
           rating_count?: number
           created_at?: string
           updated_at?: string
+        }
+      }
+      favorites: {
+        Row: {
+          id: string
+          user_id: string
+          prompt_id: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          prompt_id: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          prompt_id?: string
+          created_at?: string
+        }
+      }
+      likes: {
+        Row: {
+          id: string
+          user_id: string
+          prompt_id: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          prompt_id: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          prompt_id?: string
+          created_at?: string
         }
       }
       purchases: {
@@ -126,24 +253,24 @@ export interface Database {
       reviews: {
         Row: {
           id: string
-          prompt_id: string
           user_id: string
+          prompt_id: string
           rating: number
           comment: string | null
           created_at: string
         }
         Insert: {
           id?: string
-          prompt_id: string
           user_id: string
+          prompt_id: string
           rating: number
           comment?: string | null
           created_at?: string
         }
         Update: {
           id?: string
-          prompt_id?: string
           user_id?: string
+          prompt_id?: string
           rating?: number
           comment?: string | null
           created_at?: string
@@ -151,7 +278,41 @@ export interface Database {
       }
     }
     Views: {
-      [_ in never]: never
+      prompt_details: {
+        Row: {
+          id: string
+          title: string
+          description: string
+          content: string
+          category_id: string | null
+          tags: string[]
+          price: number
+          is_free: boolean
+          is_featured: boolean
+          is_public: boolean
+          author_id: string
+          model_id: string | null
+          downloads: number
+          views: number
+          likes: number
+          rating: number
+          rating_count: number
+          created_at: string
+          updated_at: string
+          author_name: string | null
+          author_avatar_url: string | null
+          category_name: string | null
+          category_color: string | null
+          category_icon: string | null
+          model_name: string | null
+          model_provider: string | null
+          model_icon_url: string | null
+          purchases_count: number
+          likes_count: number
+          favorites_count: number
+          average_rating: number
+        }
+      }
     }
     Functions: {
       [_ in never]: never

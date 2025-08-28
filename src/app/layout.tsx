@@ -34,8 +34,10 @@ export default function RootLayout({
       >
         <AuthProvider>
           <Navbar />
-          <main className="flex-1">
-            {children}
+          <main className="flex-1 w-full">
+            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+              {children}
+            </div>
           </main>
           <Footer />
           <Toaster position="top-center" />
