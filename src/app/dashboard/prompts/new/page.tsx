@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { toast } from 'sonner';
+import { useAIModels } from '@/hooks/useAIModels';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -42,6 +43,7 @@ const formSchema = z.object({
 export default function NewPromptPage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { models, loading: modelsLoading } = useAIModels();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -59,8 +61,6 @@ export default function NewPromptPage() {
     setIsSubmitting(true);
     try {
       // En un entorno real, aquí enviaríamos los datos a la API
-      console.log(values);
-      
       // Simulamos un retraso para mostrar el estado de carga
       await new Promise((resolve) => setTimeout(resolve, 1000));
       
@@ -68,7 +68,6 @@ export default function NewPromptPage() {
       router.push('/dashboard/prompts');
     } catch (error) {
       toast.error('Error al crear el prompt');
-      console.error(error);
     } finally {
       setIsSubmitting(false);
     }
@@ -168,15 +167,16 @@ export default function NewPromptPage() {
                       <select
                         className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                         {...field}
+                        disabled={modelsLoading}
                       >
                         <option value="" disabled>
-                          Selecciona un modelo
+                          {modelsLoading ? 'Cargando modelos...' : 'Selecciona un modelo'}
                         </option>
-                        <option value="gpt-4">GPT-4 (OpenAI)</option>
-                        <option value="gpt-3.5">GPT-3.5 (OpenAI)</option>
-                        <option value="claude-2">Claude 2 (Anthropic)</option>
-                        <option value="gemini-pro">Gemini Pro (Google)</option>
-                        <option value="llama-2">Llama 2 (Meta)</option>
+                        {models.map((model) => (
+                          <option key={model.id} value={model.id}>
+                            {model.name} ({model.provider})
+                          </option>
+                        ))}
                       </select>
                     </FormControl>
                     <FormDescription>

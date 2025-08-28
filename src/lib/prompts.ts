@@ -12,7 +12,7 @@ import {
 
 // Server-side functions
 export async function getPrompts(filters?: PromptFilters) {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   if (!supabase) return { data: [], error: 'Supabase not configured' };
 
   let query = supabase
@@ -69,7 +69,7 @@ export async function getPrompts(filters?: PromptFilters) {
 }
 
 export async function getPromptById(id: string) {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   if (!supabase) return { data: null, error: 'Supabase not configured' };
 
   const { data, error } = await supabase
@@ -83,7 +83,7 @@ export async function getPromptById(id: string) {
 }
 
 export async function getFeaturedPrompts(limit = 6) {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   if (!supabase) return { data: [], error: 'Supabase not configured' };
 
   const { data, error } = await supabase
@@ -98,7 +98,7 @@ export async function getFeaturedPrompts(limit = 6) {
 }
 
 export async function getCategories() {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   if (!supabase) return { data: [], error: 'Supabase not configured' };
 
   const { data, error } = await supabase
@@ -110,7 +110,7 @@ export async function getCategories() {
 }
 
 export async function getAIModels() {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   if (!supabase) return { data: [], error: 'Supabase not configured' };
 
   const { data, error } = await supabase
@@ -122,7 +122,7 @@ export async function getAIModels() {
 }
 
 export async function getUserPrompts(userId: string) {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   if (!supabase) return { data: [], error: 'Supabase not configured' };
 
   const { data, error } = await supabase

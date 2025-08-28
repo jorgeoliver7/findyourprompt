@@ -53,7 +53,6 @@ export default function PromptCard({
         toast.success('¡Like agregado!');
       }
     } catch (error) {
-      console.error('Error al dar like:', error);
       toast.error('Error al procesar el like');
     } finally {
       setIsLoading(false);
@@ -62,7 +61,7 @@ export default function PromptCard({
 
   const formatPrice = (price: number) => {
     if (price === 0) return 'Gratis';
-    return `$${(price / 100).toFixed(2)}`;
+    return `${(price / 100).toFixed(2)}`;
   };
 
   return (
@@ -125,20 +124,7 @@ export default function PromptCard({
             </div>
           )}
 
-          {/* Author */}
-          {showAuthor && prompt.author_name && (
-            <div className="flex items-center gap-2 mb-3">
-              <Avatar className="h-6 w-6">
-                <AvatarImage src={prompt.author_avatar_url || ''} />
-                <AvatarFallback className="text-xs">
-                  {prompt.author_name.charAt(0).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              <span className="text-sm text-muted-foreground">
-                {prompt.author_name}
-              </span>
-            </div>
-          )}
+          {/* Author - Hidden */}
         </CardContent>
 
         <CardFooter className={`flex items-center justify-between ${
@@ -176,7 +162,7 @@ export default function PromptCard({
             <span className="text-sm text-muted-foreground">{likesCount}</span>
             
             <div className="flex items-center gap-1 ml-2">
-              <DollarSign className="h-4 w-4 text-green-600" />
+              <span className="h-4 w-4 text-green-600 font-bold">€</span>
               <span className={`font-semibold ${
                 prompt.is_free ? 'text-green-600' : 'text-foreground'
               }`}>

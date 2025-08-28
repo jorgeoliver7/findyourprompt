@@ -1,44 +1,26 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { getAIModels } from '@/lib/prompts';
+import { createSupabaseServerClient } from '@/lib/supabase-server';
 
-export default function ModelsPage() {
-  // En un entorno real, obtendríamos esta información de la base de datos
-  const models = [
-    {
-      id: 'gpt-4',
-      name: 'GPT-4',
-      provider: 'OpenAI',
-      description: 'Modelo avanzado de lenguaje con fuertes capacidades de razonamiento',
-      promptCount: 1250,
-    },
-    {
-      id: 'gpt-3.5',
-      name: 'GPT-3.5',
-      provider: 'OpenAI',
-      description: 'Modelo eficiente de lenguaje para diversas tareas',
-      promptCount: 2340,
-    },
-    {
-      id: 'claude-2',
-      name: 'Claude 2',
-      provider: 'Anthropic',
-      description: 'Asistente de IA útil, inofensivo y honesto',
-      promptCount: 890,
-    },
-    {
-      id: 'gemini-pro',
-      name: 'Gemini Pro',
-      provider: 'Google',
-      description: 'Modelo multimodal de IA de Google',
-      promptCount: 760,
-    },
-    {
-      id: 'llama-2',
-      name: 'Llama 2',
-      provider: 'Meta',
-      description: 'Modelo de lenguaje grande de código abierto',
-      promptCount: 520,
-    },
-  ];
+export default async function ModelsPage() {
+  // Obtener modelos de IA de la base de datos
+  const { data: models } = await getAIModels();
+  
+  // Obtener conteo de prompts por modelo
+  const supabase = await createSupabaseServerClient();
+  const modelsWithCounts = await Promise.all(
+    (models || []).map(async (model) => {
+      const { count } = await supabase
+        .from('prompts')
+        .select('*', { count: 'exact', head: true })
+        .eq('model_id', model.id);
+      
+      return {
+        ...model,
+        promptCount: count || 0,
+      };
+    })
+  );
 
   return (
     <div className="container py-10">
@@ -50,7 +32,7 @@ export default function ModelsPage() {
         </p>
 
         <div className="grid gap-6 pt-6 md:grid-cols-2 lg:grid-cols-3">
-          {models.map((model) => (
+          {modelsWithCounts.map((model) => (
             <Card key={model.id}>
               <CardHeader>
                 <CardTitle>{model.name}</CardTitle>

@@ -63,8 +63,6 @@ export default function ReviewList({
 
     try {
       // En un entorno real, aquí enviaríamos los datos a la API
-      console.log({ promptId, ...values });
-
       // Simulamos un retraso para mostrar el estado de carga
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
@@ -73,7 +71,6 @@ export default function ReviewList({
       setCurrentRating(0);
     } catch (error) {
       toast.error('Error al enviar la reseña');
-      console.error(error);
     } finally {
       setIsSubmitting(false);
     }
