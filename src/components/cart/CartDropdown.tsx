@@ -16,7 +16,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useCartStore } from '@/lib/store';
-import { getStripe } from '@/lib/stripe';
 
 export default function CartDropdown() {
   const { items, removeItem, clearCart } = useCartStore();

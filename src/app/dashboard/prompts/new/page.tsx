@@ -31,13 +31,16 @@ const formSchema = z.object({
   content: z.string().min(10, {
     message: 'El contenido del prompt debe tener al menos 10 caracteres.',
   }),
-  price: z.coerce.number().min(0, {
-    message: 'El precio debe ser un número positivo.',
+  price: z.preprocess(
+    (val) => Number(val),
+    z.number().min(0, {
+      message: 'El precio debe ser un número positivo.',
+    })
+  ),
+  model: z.string().min(1, {
+    message: 'Por favor selecciona un modelo de IA.',
   }),
-  model: z.string({
-    required_error: 'Por favor selecciona un modelo de IA.',
-  }),
-  tags: z.string().transform((val) => val.split(',').map((tag) => tag.trim())),
+  tags: z.string(),
 });
 
 export default function NewPromptPage() {
@@ -60,9 +63,14 @@ export default function NewPromptPage() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
     try {
+      // Transformar tags de string a array para el procesamiento
+      const tagsArray = values.tags.split(',').map((tag) => tag.trim()).filter(Boolean);
+      
       // En un entorno real, aquí enviaríamos los datos a la API
       // Simulamos un retraso para mostrar el estado de carga
       await new Promise((resolve) => setTimeout(resolve, 1000));
+      
+      console.log('Datos del formulario:', { ...values, tags: tagsArray });
       
       toast.success('Prompt creado correctamente');
       router.push('/dashboard/prompts');

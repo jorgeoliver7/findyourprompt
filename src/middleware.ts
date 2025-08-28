@@ -1,9 +1,13 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
+import { createServerClient } from '@supabase/ssr';
 
 export async function middleware(request: NextRequest) {
-  const res = NextResponse.next();
+  let response = NextResponse.next({
+    request: {
+      headers: request.headers,
+    },
+  });
   
   // Check if Supabase is configured
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -11,11 +15,55 @@ export async function middleware(request: NextRequest) {
   
   if (!supabaseUrl || supabaseUrl === 'your_supabase_project_url' || !supabaseKey || supabaseKey === 'your_supabase_anon_key') {
     // If Supabase is not configured, allow all routes
-    return res;
+    return response;
   }
   
   try {
-    const supabase = createMiddlewareClient({ req: request, res });
+    const supabase = createServerClient(
+      supabaseUrl,
+      supabaseKey,
+      {
+        cookies: {
+          get(name: string) {
+            return request.cookies.get(name)?.value;
+          },
+          set(name: string, value: string, options: any) {
+            request.cookies.set({
+              name,
+              value,
+              ...options,
+            });
+            response = NextResponse.next({
+              request: {
+                headers: request.headers,
+              },
+            });
+            response.cookies.set({
+              name,
+              value,
+              ...options,
+            });
+          },
+          remove(name: string, options: any) {
+            request.cookies.set({
+              name,
+              value: '',
+              ...options,
+            });
+            response = NextResponse.next({
+              request: {
+                headers: request.headers,
+              },
+            });
+            response.cookies.set({
+              name,
+              value: '',
+              ...options,
+            });
+          },
+        },
+      }
+    );
 
     // Verificar si el usuario está autenticado
     const {
@@ -48,11 +96,11 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL('/dashboard', request.url));
     }
 
-    return res;
+    return response;
   } catch (error) {
     console.warn('Error in middleware:', error);
     // If there's an error, allow the request to continue
-    return res;
+    return response;
   }
 }
 

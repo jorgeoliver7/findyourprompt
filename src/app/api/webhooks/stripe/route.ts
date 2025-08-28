@@ -3,21 +3,33 @@ import { headers } from 'next/headers';
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-06-20',
-});
+const stripe = process.env.STRIPE_SECRET_KEY ? new Stripe(process.env.STRIPE_SECRET_KEY, {
+  apiVersion: '2025-07-30.basil',
+}) : null;
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+const supabase = process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY 
+  ? createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY
+    )
+  : null;
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
 
 export async function POST(req: NextRequest) {
   try {
+    if (!stripe) {
+      console.error('❌ Stripe not initialized');
+      return NextResponse.json({ error: 'Stripe not configured' }, { status: 500 });
+    }
+
+    if (!supabase) {
+      console.error('❌ Supabase not initialized');
+      return NextResponse.json({ error: 'Supabase not configured' }, { status: 500 });
+    }
+
     const body = await req.text();
-    const headersList = headers();
+    const headersList = await headers();
     const sig = headersList.get('stripe-signature');
 
     if (!sig) {
@@ -236,7 +248,7 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
   console.log('✅ Invoice payment succeeded:', invoice.id);
   
   try {
-    const subscriptionId = invoice.subscription as string;
+    const subscriptionId = (invoice as any).subscription as string;
     
     if (subscriptionId) {
       // Asegurar que la suscripción esté activa
@@ -261,7 +273,7 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
   console.log('❌ Invoice payment failed:', invoice.id);
   
   try {
-    const subscriptionId = invoice.subscription as string;
+    const subscriptionId = (invoice as any).subscription as string;
     
     if (subscriptionId) {
       // Marcar suscripción como con problemas de pago

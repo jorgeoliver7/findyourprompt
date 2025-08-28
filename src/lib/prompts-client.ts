@@ -56,7 +56,7 @@ export async function unlikePrompt(promptId: string) {
   }
 }
 
-export async function createPrompt(prompt: any) {
+export async function createPrompt(prompt: { [key: string]: unknown }) {
   const supabase = createSupabaseBrowserClient();
   if (!supabase) {
     toast.error('Unable to connect to database');
@@ -85,7 +85,7 @@ export async function createPrompt(prompt: any) {
   }
 }
 
-export async function updatePrompt(id: string, updates: any) {
+export async function updatePrompt(id: string, updates: { [key: string]: unknown }) {
   const supabase = createSupabaseBrowserClient();
   if (!supabase) {
     toast.error('Unable to connect to database');

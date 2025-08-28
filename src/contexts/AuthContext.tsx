@@ -7,10 +7,10 @@ import { Tables } from '@/types/database'
 type Profile = Tables<'profiles'>
 
 interface AuthContextType extends AuthState {
-  signIn: (email: string, password: string) => Promise<any>
-  signUp: (email: string, password: string, fullName: string) => Promise<any>
-  signOut: () => Promise<any>
-  updateProfile: (updates: Partial<Profile>) => Promise<any>
+  signIn: (email: string, password: string) => Promise<{ error?: string }>
+  signUp: (email: string, password: string, fullName: string) => Promise<{ error?: string }>
+  signOut: () => Promise<{ error?: string }>
+  updateProfile: (updates: Partial<Profile>) => Promise<{ error?: string }>
   isAuthenticated: boolean
   isAdmin: boolean
   isPremium: boolean

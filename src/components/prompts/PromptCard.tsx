@@ -5,8 +5,7 @@ import Link from 'next/link';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Heart, Download, Star, Eye, DollarSign } from 'lucide-react';
+import { Heart, Download, Star, Eye } from 'lucide-react';
 import { PromptWithDetails } from '@/types/prompts';
 import { useAuth } from '@/hooks/useAuth';
 import { likePrompt, unlikePrompt } from '@/lib/prompts-client';
@@ -20,7 +19,6 @@ interface PromptCardProps {
 
 export default function PromptCard({ 
   prompt, 
-  showAuthor = true, 
   compact = false 
 }: PromptCardProps) {
   const { user } = useAuth();
@@ -52,7 +50,7 @@ export default function PromptCard({
         setLikesCount(prev => prev + 1);
         toast.success('¡Like agregado!');
       }
-    } catch (error) {
+    } catch (_error) {
       toast.error('Error al procesar el like');
     } finally {
       setIsLoading(false);

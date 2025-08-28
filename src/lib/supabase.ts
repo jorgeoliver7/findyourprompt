@@ -1,14 +1,12 @@
-import { createClient } from '@supabase/supabase-js';
-import { createBrowserClient } from '@supabase/ssr';
+import { createClient } from '@supabase/supabase-js'
+import type { Database } from '@/types/database'
 
-export const createSupabaseBrowserClient = () => {
-  return createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
-};
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
-export const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+// Create a single instance that will be reused
+const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey)
+
+export function createSupabaseBrowserClient() {
+  return supabase
+}

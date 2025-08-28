@@ -4,7 +4,7 @@ import { Card } from '@/components/ui/card';
 
 export default function PromptDetailsPage({ params }: { params: { id: string } }) {
   // En un entorno real, obtendríamos los datos del prompt desde la base de datos
-  const promptId = params.id;
+  const _promptId = params.id;
 
   return (
     <div className="container py-10">

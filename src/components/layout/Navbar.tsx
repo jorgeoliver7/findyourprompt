@@ -16,7 +16,7 @@ import { useAuthContext } from '@/contexts/AuthContext';
 import CartDropdown from '@/components/cart/CartDropdown';
 
 export default function Navbar() {
-  const { user, profile, signOut, loading } = useAuthContext();
+  const { user, profile, signOut } = useAuthContext();
   const pathname = usePathname();
 
   const navItems = [

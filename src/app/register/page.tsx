@@ -12,7 +12,6 @@ import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -67,8 +66,8 @@ export default function RegisterPage() {
 
       toast.success('Cuenta creada exitosamente. Revisa tu email para confirmar tu cuenta.');
       router.push('/login');
-    } catch (error: any) {
-      toast.error(error.message || 'Error al crear la cuenta');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Error al crear la cuenta');
     } finally {
       setIsSubmitting(false);
     }

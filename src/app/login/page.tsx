@@ -12,7 +12,6 @@ import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -57,8 +56,8 @@ export default function LoginPage() {
       toast.success('Inicio de sesión exitoso');
       router.push('/dashboard');
       router.refresh();
-    } catch (error: any) {
-      toast.error(error.message || 'Error al iniciar sesión');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Error al iniciar sesión');
     } finally {
       setIsSubmitting(false);
     }

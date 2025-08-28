@@ -36,7 +36,7 @@ type ReviewListProps = {
 };
 
 export default function ReviewList({
-  promptId,
+  promptId: _promptId,
   reviews,
   userHasPurchased = false,
   userHasReviewed = false,
@@ -69,7 +69,7 @@ export default function ReviewList({
       toast.success('Reseña enviada correctamente');
       form.reset();
       setCurrentRating(0);
-    } catch (error) {
+    } catch (_error) {
       toast.error('Error al enviar la reseña');
     } finally {
       setIsSubmitting(false);

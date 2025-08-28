@@ -1,8 +1,5 @@
 import { createSupabaseServerClient } from './supabase-server';
 import { 
-  Prompt, 
-  PromptInsert, 
-  PromptUpdate, 
   PromptDetails, 
   PromptFilters,
   Category,

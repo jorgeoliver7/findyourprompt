@@ -1,9 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { User, Session } from '@supabase/supabase-js'
+import { useState, useEffect, useCallback } from 'react'
 import { createSupabaseBrowserClient } from '@/lib/supabase'
-import { Tables } from '@/types/database'
+import type { User, Session } from '@supabase/supabase-js'
+import type { Tables } from '@/types/database'
 
 type Profile = Tables<'profiles'>
 
@@ -12,21 +12,24 @@ export interface AuthState {
   profile: Profile | null
   session: Session | null
   loading: boolean
+  signIn: (email: string, password: string) => Promise<{ error?: string }>
+  signUp: (email: string, password: string, fullName: string) => Promise<{ error?: string }>
+  signOut: () => Promise<{ error?: string }>
+  updateProfile: (updates: Partial<Profile>) => Promise<{ error?: string }>
+  isAuthenticated: boolean
+  isAdmin: boolean
+  isPremium: boolean
 }
 
-export function useAuth() {
-  const [authState, setAuthState] = useState<AuthState>({
-    user: null,
-    profile: null,
-    session: null,
-    loading: true
-  })
+export function useAuth(): AuthState {
+  const [user, setUser] = useState<User | null>(null)
+  const [profile, setProfile] = useState<Profile | null>(null)
+  const [session, setSession] = useState<Session | null>(null)
+  const [loading, setLoading] = useState(true)
 
-  // Lazy initialization of Supabase client
-  const getSupabase = () => createSupabaseBrowserClient()
+  const supabase = createSupabaseBrowserClient()
   
-  // If Supabase is not configured, return mock data
-  const supabase = getSupabase();
+  // If supabase client is not available, return mock state
   if (!supabase) {
     return {
       user: null,
@@ -36,72 +39,14 @@ export function useAuth() {
       isAuthenticated: false,
       isAdmin: false,
       isPremium: false,
-      signIn: async () => ({ error: new Error('Supabase not configured') }),
-      signUp: async () => ({ error: new Error('Supabase not configured') }),
-      signOut: async () => ({ error: new Error('Supabase not configured') }),
-      updateProfile: async () => ({ error: new Error('Supabase not configured') })
+      signIn: async () => ({ error: 'Supabase not configured' }),
+      signUp: async () => ({ error: 'Supabase not configured' }),
+      signOut: async () => ({ error: 'Supabase not configured' }),
+      updateProfile: async () => ({ error: 'Supabase not configured' })
     }
   }
 
-  useEffect(() => {
-    // Get initial session
-    const getInitialSession = async () => {
-      const { data: { session }, error } = await supabase.auth.getSession()
-      
-      if (error) {
-        console.error('Error getting session:', error)
-        setAuthState(prev => ({ ...prev, loading: false }))
-        return
-      }
-
-      if (session?.user) {
-        const profile = await getProfile(session.user.id)
-        setAuthState({
-          user: session.user,
-          profile,
-          session,
-          loading: false
-        })
-      } else {
-        setAuthState({
-          user: null,
-          profile: null,
-          session: null,
-          loading: false
-        })
-      }
-    }
-
-    getInitialSession()
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (session?.user) {
-          const profile = await getProfile(session.user.id)
-          setAuthState({
-            user: session.user,
-            profile,
-            session,
-            loading: false
-          })
-        } else {
-          setAuthState({
-            user: null,
-            profile: null,
-            session: null,
-            loading: false
-          })
-        }
-      }
-    )
-
-    return () => {
-      subscription.unsubscribe()
-    }
-  }, [])
-
-  const getProfile = async (userId: string): Promise<Profile | null> => {
+  const getProfile = useCallback(async (userId: string): Promise<Profile | null> => {
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -119,7 +64,57 @@ export function useAuth() {
       console.error('Error fetching profile:', error)
       return null
     }
-  }
+  }, [supabase])
+
+  useEffect(() => {
+    // Get initial session
+    const getInitialSession = async () => {
+      const { data: { session }, error } = await supabase.auth.getSession()
+      
+      if (error) {
+        console.error('Error getting session:', error)
+        setAuthState(prev => ({ ...prev, loading: false }))
+        return
+      }
+
+      if (session?.user) {
+        const profile = await getProfile(session.user.id)
+        setUser(session.user)
+        setProfile(profile)
+        setSession(session)
+        setLoading(false)
+      } else {
+        setUser(null)
+        setProfile(null)
+        setSession(null)
+        setLoading(false)
+      }
+    }
+
+    getInitialSession()
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (session?.user) {
+          const profile = await getProfile(session.user.id)
+          setUser(session.user)
+          setProfile(profile)
+          setSession(session)
+          setLoading(false)
+        } else {
+          setUser(null)
+          setProfile(null)
+          setSession(null)
+          setLoading(false)
+        }
+      }
+    )
+
+    return () => {
+      subscription.unsubscribe()
+    }
+  }, [getProfile, supabase])
 
   const signIn = async (email: string, password: string) => {
     const { data, error } = await supabase.auth.signInWithPassword({
@@ -148,33 +143,50 @@ export function useAuth() {
   }
 
   const updateProfile = async (updates: Partial<Profile>) => {
-    if (!authState.user) return { error: new Error('No user logged in') }
+    if (!user) return { error: 'No user logged in' }
 
     const { data, error } = await supabase
       .from('profiles')
       .update(updates)
-      .eq('id', authState.user.id)
+      .eq('id', user.id)
       .select()
       .single()
 
     if (!error && data) {
-      setAuthState(prev => ({
-        ...prev,
-        profile: data
-      }))
+      setProfile(data)
     }
 
-    return { data, error }
+    return { error: error?.message }
+  }
+
+  // If Supabase is not configured, return mock data
+  if (!supabase) {
+    return {
+      user: null,
+      profile: null,
+      session: null,
+      loading: false,
+      isAuthenticated: false,
+      isAdmin: false,
+      isPremium: false,
+      signIn: async () => ({ error: 'Supabase not configured' }),
+      signUp: async () => ({ error: 'Supabase not configured' }),
+      signOut: async () => ({ error: 'Supabase not configured' }),
+      updateProfile: async () => ({ error: 'Supabase not configured' })
+    }
   }
 
   return {
-    ...authState,
+    user,
+    profile,
+    session,
+    loading,
     signIn,
     signUp,
     signOut,
     updateProfile,
-    isAuthenticated: !!authState.user,
-    isAdmin: authState.profile?.role === 'admin',
-    isPremium: authState.profile?.subscription_tier !== 'free'
+    isAuthenticated: !!user,
+    isAdmin: profile?.role === 'admin',
+    isPremium: profile?.subscription_tier !== 'free'
   }
 }

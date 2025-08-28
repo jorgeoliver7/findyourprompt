@@ -12,7 +12,6 @@ import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -48,7 +47,7 @@ export default function ResetPasswordPage() {
     };
 
     checkSession();
-  }, []);
+  }, [supabase.auth]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -72,8 +71,8 @@ export default function ResetPasswordPage() {
 
       toast.success('Contraseña actualizada exitosamente');
       router.push('/login');
-    } catch (error: any) {
-      toast.error(error.message || 'Error al actualizar la contraseña');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Error al actualizar la contraseña');
     } finally {
       setIsSubmitting(false);
     }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Search, Filter, SlidersHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -22,7 +22,7 @@ import {
 } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
 import PromptCard from '@/components/prompts/PromptCard';
-import { PromptWithDetails, Category, AIModel, PromptSortBy } from '@/types/prompts';
+import { PromptWithDetails, Category, AIModel } from '@/types/prompts';
 
 interface PromptsPageClientProps {
   initialPrompts: PromptWithDetails[];
@@ -52,8 +52,8 @@ export default function PromptsPageClient({
 }: PromptsPageClientProps) {
   const router = useRouter();
   const urlSearchParams = useSearchParams();
-  const [prompts, setPrompts] = useState(initialPrompts);
-  const [isLoading, setIsLoading] = useState(false);
+  const [prompts, _setPrompts] = useState(initialPrompts);
+  const [_isLoading, _setIsLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState(searchParams.search || '');
   const [selectedCategory, setSelectedCategory] = useState(searchParams.category || '');
   const [selectedModel, setSelectedModel] = useState(searchParams.model || '');
